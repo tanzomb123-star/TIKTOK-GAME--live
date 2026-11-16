@@ -1,4 +1,9 @@
-# Tower Live
+# TIKTOK-GAME--live
+โปรเเกมlive สด หลากหลาย
+
+## เกมที่ 1: Tower Live
+
+![ภาพเกม](docs/cosmic-play.png)
 
 เกม Tower Defense ที่ผู้ชม TikTok Live เล่นร่วมกันผ่านคอมเมนต์และไลก์ เพื่อปกป้องบ้านสตรีมเมอร์จาก 10 เวฟ
 
