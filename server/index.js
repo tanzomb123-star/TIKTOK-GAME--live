@@ -12,7 +12,8 @@ console.log(`WebSocket hub on ws://localhost:${hub.port}`);
 
 if (useMock) {
   console.log('MOCK mode: fake audience (do not use during a real live)');
-  startMock((e) => hub.broadcast(e));
+  const war = process.argv.includes('--war');
+  startMock((e) => hub.broadcast(e), war ? { commands: ['A', 'B'] } : {});
 } else {
   const { startTikTok } = await import('./tiktok.js');
   const user = process.env.TIKTOK_USERNAME;

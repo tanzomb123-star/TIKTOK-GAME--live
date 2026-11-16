@@ -81,6 +81,21 @@ export function createCosmicTextures(scene) {
     g.fillStyle(0xffffff).fillCircle(26, 22, 3);
   });
 
+  // light, neutral versions meant to be tinted per team (Team War)
+  make(scene, 'ship-white', 48, 32, (g) => {
+    g.fillStyle(0xffffff, 0.35).fillEllipse(8, 16, 14, 8);
+    g.fillStyle(0xd8d8e8).fillTriangle(6, 4, 6, 28, 46, 16);
+    g.fillStyle(0xffffff).fillTriangle(14, 10, 14, 22, 34, 16);
+    g.fillStyle(0x30304a).fillCircle(30, 16, 3);
+  });
+  make(scene, 'boss-white', 130, 80, (g) => {
+    g.fillStyle(0xffffff, 0.25).fillEllipse(65, 44, 128, 40);
+    g.fillStyle(0x9a9ab8).fillEllipse(65, 40, 120, 34);
+    g.fillStyle(0xd8d8ea).fillEllipse(65, 36, 96, 22);
+    g.fillStyle(0xffffff, 0.95).fillEllipse(65, 22, 40, 26);
+    for (let i = 0; i < 7; i++) g.fillStyle(0xffffff).fillCircle(20 + i * 15, 44, 3);
+  });
+
   // enemies face left
   make(scene, 'alien', 46, 34, (g) => {
     g.fillStyle(0xff3d7f, 0.3).fillEllipse(23, 26, 44, 10);

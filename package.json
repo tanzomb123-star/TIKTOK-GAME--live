@@ -7,6 +7,7 @@
     "dev": "vite",
     "server": "node server/index.js",
     "mock": "node server/index.js --mock",
+    "mock:war": "node server/index.js --mock --war",
     "test": "vitest run"
   },
   "dependencies": {
