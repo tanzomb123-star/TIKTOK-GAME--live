@@ -3,6 +3,7 @@ import { sanitizeName } from '../core/safety.js';
 import { createCosmicTextures } from './textures.js';
 import { createBackdrop } from './background.js';
 import { FONT } from '../../overlay/hud.js';
+import { sfx } from '../audio.js';
 
 export class GameOverScene extends Phaser.Scene {
   constructor() { super('GameOver'); }
@@ -13,6 +14,7 @@ export class GameOverScene extends Phaser.Scene {
     createCosmicTextures(this);
     this.backdrop = createBackdrop(this);
     const won = this.result.phase === 'won';
+    sfx().play(won ? 'win' : 'lose');
     const color = won ? 0x5ff2ff : 0xff3d7f;
     const style = { fontFamily: FONT, color: '#ffffff', stroke: '#140a2e', strokeThickness: 6, align: 'center' };
 

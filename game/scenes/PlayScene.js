@@ -7,6 +7,8 @@ import { connect, hubUrl } from '../net.js';
 import { createHud } from '../../overlay/hud.js';
 import { createCosmicTextures } from './textures.js';
 import { createBackdrop } from './background.js';
+import { sfx } from '../audio.js';
+import { FONT } from '../../overlay/hud.js';
 
 const LANE_Y = 330;
 const STATION_X = 78;
@@ -53,6 +55,14 @@ export class PlayScene extends Phaser.Scene {
     }).setDepth(1);
 
     this.hud = createHud(this, config);
+    this.sfx = sfx();
+    this.prevLevel = 0;
+    this.muteText = this.add.text(480, 50, '', { fontFamily: FONT, fontSize: '14px', color: '#9fd8ff', stroke: '#140a2e', strokeThickness: 3 }).setOrigin(0.5, 0).setDepth(10);
+    const showMute = () => this.muteText.setText(this.sfx.muted ? 'เสียงปิดอยู่ (กด M)' : '');
+    showMute();
+    this.input.keyboard.on('keydown', () => this.sfx.unlock());
+    this.input.on('pointerdown', () => this.sfx.unlock());
+    this.input.keyboard.on('keydown-M', () => { this.sfx.toggleMute(); showMute(); });
     this.net = connect(hubUrl(location), (e) => this.handle(e));
     this.events.once('shutdown', () => this.net.close());
 
@@ -71,6 +81,8 @@ export class PlayScene extends Phaser.Scene {
     const before = this.state.enemies.length;
     const ok = handleLiveEvent(this.state, event, config, this.allow, performance.now());
     if (ok && this.state.enemies.length === 0 && before > 0) this.nova();
+    if (ok && this.state.towerLevel > this.prevLevel) this.sfx.play('upgrade');
+    this.prevLevel = this.state.towerLevel;
   }
 
   update(time, deltaMs) {
@@ -90,6 +102,8 @@ export class PlayScene extends Phaser.Scene {
       sp = this.add.image(x, LANE_Y, key).setDepth(2);
       sp.setScale(0.2);
       this.tweens.add({ targets: sp, scale: key === 'boss' ? 1 : key === 'alien' ? 1.1 : 0.95, duration: 260, ease: 'Back.Out' });
+      if (key === 'boss') this.sfx.play('boss');
+      else if (key.startsWith('ship-')) this.sfx.play('summon', key.slice(5));
       this.sprites.set(id, sp);
     }
     return sp;
@@ -131,6 +145,7 @@ export class PlayScene extends Phaser.Scene {
     if (p.enemy && p.x <= 2) {
       // reached the station
       this.cameras.main.shake(160, 0.006);
+      this.sfx.play('hit');
       this.sparks.explode(18, STATION_X + 30, p.y, { tint: 0xff3d3d });
       this.tweens.add({ targets: this.shield, alpha: 0.6, duration: 80, yoyo: true });
       return;
@@ -138,12 +153,14 @@ export class PlayScene extends Phaser.Scene {
     const tint = p.enemy ? [0xff3d7f, 0xffe066, 0xffffff] : [KIND_COLOR[p.kind] || 0xffffff, 0xffffff];
     this.sparks.setParticleTint?.(tint[0]);
     this.sparks.explode(p.enemy ? 22 : 14, x, p.y);
+    if (p.enemy) this.sfx.play('boom');
   }
 
   nova() {
     const ring = this.add.image(480, LANE_Y, 'glow').setTint(0xff6bd6).setBlendMode(Phaser.BlendModes.ADD).setScale(0.5).setAlpha(0.9).setDepth(8);
     this.tweens.add({ targets: ring, scale: 14, alpha: 0, duration: 650, onComplete: () => ring.destroy() });
     this.cameras.main.flash(180, 255, 140, 230);
+    this.sfx.play('nova');
   }
 
   beam(x1, y1, x2, y2, color, width, life) {
@@ -156,7 +173,10 @@ export class PlayScene extends Phaser.Scene {
     if (s.towerCooldown > this.prevCooldown + 0.05) {
       let target = null;
       for (const p of this.prev.values()) if (p.enemy && p.x <= config.tower.range && (!target || p.x < target.x)) target = p;
-      if (target) this.beam(TURRET.x, TURRET.y, sx(target.x), target.y, 0xff6bd6, 3 + s.towerLevel, 0.18);
+      if (target) {
+        this.beam(TURRET.x, TURRET.y, sx(target.x), target.y, 0xff6bd6, 3 + s.towerLevel, 0.18);
+        this.sfx.play('laser', s.towerLevel);
+      }
     }
     this.prevCooldown = s.towerCooldown;
 
