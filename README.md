@@ -22,7 +22,10 @@
 npm install
 npm test
 ```
-ต้องใช้ Node.js 20 ขึ้นไป
+ต้องใช้ Node.js 22.12 ขึ้นไป (แนะนำรุ่น LTS ล่าสุดจาก https://nodejs.org)
+
+Windows: ถ้า PowerShell ขึ้น `npm.ps1 cannot be loaded because running scripts is disabled` ให้รันครั้งเดียว:
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` แล้วตอบ `Y` หรือใช้ `npm.cmd` แทน `npm`
 
 ## ลองเล่นแบบไม่ต้องไลฟ์
 ```bash
