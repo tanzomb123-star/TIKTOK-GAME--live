@@ -11,9 +11,16 @@ export function startMock(emit, { minMs = 300, maxMs = 900, commands } = {}) {
       const id = rand(1, 30);
       const who = { userId: `mock-${id}`, nickname: `Demo${id}`, mock: true };
       const text = commands ? commands[id % commands.length] : String(rand(1, 3));
-      if (r < 0.55) emit({ type: 'comment', text, ...who });
-      else if (r < 0.95) emit({ type: 'like', count: rand(1, 10), ...who });
-      else emit({ type: 'gift', diamonds: [1, 20, 150][rand(0, 2)], ...who });
+      if (r < 0.5) emit({ type: 'comment', text, ...who });
+      else if (r < 0.82) emit({ type: 'like', count: rand(1, 10), ...who });
+      else if (r < 0.87) emit({ type: 'viewers', count: 20 + rand(0, 40), mock: true });
+      else if (r < 0.9) emit({ type: 'follow', ...who });
+      else if (r < 0.92) emit({ type: 'share', ...who });
+      else if (r < 0.95) emit({ type: 'join', ...who });
+      else {
+        const [giftName, diamonds] = [['Rose', 1], ['Star', 20], ['Rocket', 150]][rand(0, 2)];
+        emit({ type: 'gift', diamonds, giftName, ...who });
+      }
       n += 1;
       next();
     }, rand(minMs, maxMs));

@@ -49,6 +49,6 @@ describe('mock identities', () => {
     const stop = startMock((e) => events.push(e), { minMs: 1, maxMs: 1 });
     vi.advanceTimersByTime(500);
     stop();
-    for (const e of events) expect(e.nickname).toBe(`Demo${e.userId.replace('mock-', '')}`);
+    for (const e of events.filter((x) => x.userId)) expect(e.nickname).toBe(`Demo${e.userId.replace('mock-', '')}`);
   });
 });
