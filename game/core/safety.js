@@ -13,8 +13,8 @@ export function sanitizeName(name) {
 }
 
 // Browser-safe, dependency-free 10-char pseudonym (FNV-1a x2 -> hex). Not for security, only to avoid storing raw ids.
-export function hashUserId(userId) {
-  const s = String(userId);
+export function hashUserId(userId, salt = '') {
+  const s = `${salt}:${userId}`;
   let h1 = 0x811c9dc5, h2 = 0x01000193;
   for (let i = 0; i < s.length; i++) {
     h1 = Math.imul(h1 ^ s.charCodeAt(i), 0x01000193) >>> 0;

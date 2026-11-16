@@ -5,7 +5,8 @@ export const SPAWN_X = 800;
 const UNIT_START_X = 40;
 const MELEE_RANGE = 20;
 const STEP = 0.1;
-const SCORE = { summon: 1, upgrade: 5, clear: 10, boss: 30 };
+// Every helpful action scores the same, so the board never ranks gifting above playing (docs/compliance.md).
+const SCORE = { summon: 1, upgrade: 1, clear: 1, boss: 1 };
 
 export function waveSize(wave, config) {
   return config.waves.baseCount + config.waves.countPerWave * (wave - 1);
@@ -63,7 +64,8 @@ export function applyAction(state, action, config) {
       addScore(state, action, SCORE.clear);
       return true;
     case 'boss':
-      state.boss = { x: UNIT_START_X, hp: config.boss.hp, maxHp: config.boss.hp, timeLeft: config.boss.durationSec };
+      if (state.boss) state.boss.timeLeft += config.boss.durationSec; // extend, don't reset
+      else state.boss = { x: UNIT_START_X, hp: config.boss.hp, maxHp: config.boss.hp, timeLeft: config.boss.durationSec };
       addScore(state, action, SCORE.boss);
       return true;
     default:
@@ -108,7 +110,7 @@ function step(state, dt, config) {
     const b = state.boss;
     const target = nearest(state.enemies, b.x, MELEE_RANGE);
     if (target) target.hp -= config.boss.dmg * dt;
-    else b.x = Math.min(SPAWN_X, b.x + 30 * dt);
+    else b.x = Math.min(SPAWN_X, b.x + config.boss.speed * dt);
     b.timeLeft -= dt;
   }
 

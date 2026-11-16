@@ -42,13 +42,13 @@ describe('actions', () => {
     tick(s, config.boss.durationSec + 1, config);
     expect(s.boss).toBeNull();
   });
-  it('actions add score: summon 1, upgrade 5, clear 10, boss 30', () => {
+  it('each helpful action adds 1 point', () => {
     const s = createGame(config);
     applyAction(s, summon(), config);
     applyAction(s, { type: 'upgrade', ...A }, config);
     applyAction(s, { type: 'clear', ...A }, config);
     applyAction(s, { type: 'boss', ...A }, config);
-    expect(s.leaderboard.u1.score).toBe(46);
+    expect(s.leaderboard.u1.score).toBe(4);
   });
   it('applyAction after game over returns false and leaves state unchanged', () => {
     const s = createGame(config);
@@ -70,7 +70,7 @@ describe('review fixes', () => {
     s.energy = 0;
     expect(applyAction(s, { type: 'upgrade', ...A }, config)).toBe(true);
     expect(s.energy).toBe(config.tower.maxLevelGiftEnergy);
-    expect(s.leaderboard.u1.score).toBe(5);
+    expect(s.leaderboard.u1.score).toBe(1);
     expect(s.towerLevel).toBe(config.tower.maxLevel);
   });
   it('viewer ids like __proto__ and constructor cannot pollute or hide', () => {

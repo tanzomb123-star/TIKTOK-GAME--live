@@ -7,9 +7,10 @@ const asStr = (v) => (v === undefined || v === null ? '' : String(v));
 
 function who(user) {
   if (!user || typeof user !== 'object') return null;
-  const userId = asStr(user.uniqueId || user.userId || user.displayId || user.nickname);
+  // Stable numeric id first (current proto), legacy README fields as fallbacks; nickname only as a last resort.
+  const userId = asStr(user.id || user.userId || user.uniqueId || user.displayId || user.nickname);
   if (!userId) return null;
-  return { userId, nickname: asStr(user.nickname || user.uniqueId || userId) };
+  return { userId, nickname: asStr(user.nickname || user.displayId || user.uniqueId || userId) };
 }
 
 // Accepts both the current (content/count/gift) and legacy (comment/likeCount/giftDetails) shapes.
@@ -62,7 +63,7 @@ function appendLog(dir, event) {
 }
 
 // Returns a stop function. Retries every 10s when the connection drops.
-export function startTikTok(username, emit, { logDir = 'logs', retryMs = 10000, toLog = (e) => e } = {}) {
+export function startTikTok(username, emit, { logDir = 'logs', retryMs = 10000, toLog = (e) => e, loadLib = () => import('tiktok-live-connector') } = {}) {
   let stopped = false;
   let conn;
   let timer;
@@ -77,14 +78,21 @@ export function startTikTok(username, emit, { logDir = 'logs', retryMs = 10000, 
 
   const connect = async () => {
     if (stopped) return;
-    const { TikTokLiveConnection, WebcastEvent, ControlEvent } = await import('tiktok-live-connector');
+    let lib;
+    try {
+      lib = await loadLib();
+    } catch (err) {
+      retry(`library load failed: ${err?.message || err}`);
+      return;
+    }
+    const { TikTokLiveConnection, WebcastEvent, ControlEvent } = lib;
     conn = new TikTokLiveConnection(username, { processInitialData: false });
     conn.on(WebcastEvent.CHAT, handle('chat'));
     conn.on(WebcastEvent.LIKE, handle('like'));
     conn.on(WebcastEvent.GIFT, handle('gift'));
     conn.on(WebcastEvent.MEMBER, handle('member'));
     conn.on(ControlEvent.DISCONNECTED, () => retry('disconnected'));
-    conn.on(ControlEvent.ERROR, ({ info } = {}) => console.error('TikTok error:', info));
+    conn.on(ControlEvent.ERROR, (err) => console.error('TikTok error:', err?.info ?? err?.message ?? err));
     try {
       await conn.connect();
       console.log(`Connected to TikTok live of @${username}`);

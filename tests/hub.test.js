@@ -41,3 +41,14 @@ describe('mock', () => {
     expect(events).toHaveLength(0);
   });
 });
+
+describe('mock identities', () => {
+  it('each mock viewer has one consistent nickname', () => {
+    vi.useFakeTimers();
+    const events = [];
+    const stop = startMock((e) => events.push(e), { minMs: 1, maxMs: 1 });
+    vi.advanceTimersByTime(500);
+    stop();
+    for (const e of events) expect(e.nickname).toBe(`Demo${e.userId.replace('mock-', '')}`);
+  });
+});

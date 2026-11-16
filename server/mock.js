@@ -7,7 +7,8 @@ export function startMock(emit, { minMs = 300, maxMs = 900 } = {}) {
   const next = () => {
     timer = setTimeout(() => {
       const r = Math.random();
-      const who = { userId: `mock-${rand(1, 30)}`, nickname: `Demo${rand(1, 30)}`, mock: true };
+      const id = rand(1, 30);
+      const who = { userId: `mock-${id}`, nickname: `Demo${id}`, mock: true };
       if (r < 0.55) emit({ type: 'comment', text: String(rand(1, 3)), ...who });
       else if (r < 0.95) emit({ type: 'like', count: rand(1, 10), ...who });
       else emit({ type: 'gift', diamonds: [1, 20, 150][rand(0, 2)], ...who });

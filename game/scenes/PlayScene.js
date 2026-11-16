@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { config } from '../config.js';
-import { createGame, applyAction, tick, topHelpers } from '../core/state.js';
-import { mapEvent, createRateLimiter } from '../core/events.js';
-import { connect } from '../net.js';
+import { createGame, tick, topHelpers } from '../core/state.js';
+import { createRateLimiter } from '../core/events.js';
+import { handleLiveEvent } from '../core/dispatch.js';
+import { connect, hubUrl } from '../net.js';
 import { createHud } from '../../overlay/hud.js';
 
 const GROUND_Y = 400;
@@ -18,7 +19,7 @@ export class PlayScene extends Phaser.Scene {
     this.demo = false;
     this.g = this.add.graphics();
     this.hud = createHud(this, config);
-    this.net = connect(`ws://${location.hostname || 'localhost'}:8080`, (e) => this.handle(e));
+    this.net = connect(hubUrl(location), (e) => this.handle(e));
     this.events.once('shutdown', () => this.net.close());
 
     const key = (k, ev) => this.input.keyboard.on(`keydown-${k}`, () => this.handle({ userId: 'keyboard', nickname: 'Keyboard', mock: true, ...ev }));
@@ -32,11 +33,8 @@ export class PlayScene extends Phaser.Scene {
   }
 
   handle(event) {
-    if (!event || this.state.phase !== 'playing') return;
-    if (event.mock) this.demo = true;
-    if (event.type === 'comment' && !this.allow(String(event.userId), performance.now())) return;
-    const action = mapEvent(event, config);
-    if (action) applyAction(this.state, action, config);
+    if (event?.mock) this.demo = true;
+    handleLiveEvent(this.state, event, config, this.allow, performance.now());
   }
 
   update(_, deltaMs) {

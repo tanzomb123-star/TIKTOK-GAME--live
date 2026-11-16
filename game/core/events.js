@@ -27,7 +27,13 @@ export function mapEvent(event, config) {
 
 export function createRateLimiter(commandsPerSec) {
   const hits = new Map();
-  return (userId, nowMs) => {
+  let lastSweep = 0;
+  const allow = (userId, nowMs) => {
+    if (nowMs - lastSweep > 1000) {
+      // forget viewers who have been quiet for over a second
+      for (const [id, ts] of hits) if (!ts.length || nowMs - ts[ts.length - 1] >= 1000) hits.delete(id);
+      lastSweep = nowMs;
+    }
     const recent = (hits.get(userId) || []).filter((t) => nowMs - t < 1000);
     if (recent.length >= commandsPerSec) {
       hits.set(userId, recent);
@@ -37,4 +43,6 @@ export function createRateLimiter(commandsPerSec) {
     hits.set(userId, recent);
     return true;
   };
+  allow.size = () => hits.size;
+  return allow;
 }

@@ -15,6 +15,5 @@ export const config = {
     enemyDmg: 5, enemySpeed: 25, spawnIntervalSec: 1.2, restSec: 8,
   },
   tower: { baseDmg: 4, dmgPerLevel: 2, maxLevel: 5, maxLevelGiftEnergy: 10, range: 220, fireIntervalSec: 1 },
-  boss: { hp: 300, dmg: 20, durationSec: 20 },
-  clearAllDamage: 9999,
+  boss: { hp: 300, dmg: 20, durationSec: 20, speed: 30 },
 };
