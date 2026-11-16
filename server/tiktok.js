@@ -13,7 +13,7 @@ function who(user) {
 }
 
 // Accepts both the current (content/count/gift) and legacy (comment/likeCount/giftDetails) shapes.
-export function normalize(raw, kind) {
+export function normalize(raw, kind, streaks = new Map()) {
   if (!raw || typeof raw !== 'object') return null;
   const w = who(raw.user);
   if (!w) return null;
@@ -28,11 +28,19 @@ export function normalize(raw, kind) {
     }
     case 'gift': {
       const g = raw.gift ?? raw.giftDetails ?? {};
-      const streakable = (g.type ?? g.giftType) === 1;
-      if (streakable && !raw.repeatEnd) return null; // streak still running; count it once at the end
       const each = Number(g.diamondCount);
       if (!(each > 0)) return null;
-      return { type: 'gift', ...w, diamonds: each * Math.max(Number(raw.repeatCount) || 1, 1) };
+      const count = Math.max(Number(raw.repeatCount) || 1, 1);
+      if ((g.type ?? g.giftType) !== 1) return { type: 'gift', ...w, diamonds: each * count };
+      // Streak gift: apply each new step immediately (so the effect shows at once) and ignore the closing duplicate.
+      const key = `${w.userId}:${asStr(raw.groupId)}`;
+      const delta = count - (streaks.get(key) || 0);
+      if (raw.repeatEnd) streaks.delete(key);
+      else {
+        if (streaks.size > 1000) streaks.clear(); // streak-end events can be lost; never grow without bound
+        streaks.set(key, count);
+      }
+      return delta > 0 ? { type: 'gift', ...w, diamonds: each * delta } : null;
     }
     case 'member':
       return { type: 'join', ...w };
@@ -41,23 +49,29 @@ export function normalize(raw, kind) {
   }
 }
 
-function appendLog(file, event) {
+// One file per UTC day, so the 7-day age-based prune in guard.js really deletes old records.
+export function dailyLogName(nowMs) {
+  return `events-${new Date(nowMs).toISOString().slice(0, 10)}.jsonl`;
+}
+
+function appendLog(dir, event) {
   try {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.appendFileSync(file, JSON.stringify({ t: Date.now(), ...event }) + '\n');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(path.join(dir, dailyLogName(Date.now())), JSON.stringify({ t: Date.now(), ...event }) + '\n');
   } catch { /* logging must never break the game */ }
 }
 
 // Returns a stop function. Retries every 10s when the connection drops.
-export function startTikTok(username, emit, { logFile = 'logs/events.jsonl', retryMs = 10000, toLog = (e) => e } = {}) {
+export function startTikTok(username, emit, { logDir = 'logs', retryMs = 10000, toLog = (e) => e } = {}) {
   let stopped = false;
   let conn;
   let timer;
+  const streaks = new Map();
 
   const handle = (kind) => (raw) => {
-    const e = normalize(raw, kind);
+    const e = normalize(raw, kind, streaks);
     if (!e) return;
-    appendLog(logFile, toLog(e));
+    appendLog(logDir, toLog(e));
     emit(e);
   };
 

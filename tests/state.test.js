@@ -63,6 +63,27 @@ describe('actions', () => {
   });
 });
 
+describe('review fixes', () => {
+  it('small gift at max tower level gives energy and score instead of nothing', () => {
+    const s = createGame(config);
+    s.towerLevel = config.tower.maxLevel;
+    s.energy = 0;
+    expect(applyAction(s, { type: 'upgrade', ...A }, config)).toBe(true);
+    expect(s.energy).toBe(config.tower.maxLevelGiftEnergy);
+    expect(s.leaderboard.u1.score).toBe(5);
+    expect(s.towerLevel).toBe(config.tower.maxLevel);
+  });
+  it('viewer ids like __proto__ and constructor cannot pollute or hide', () => {
+    const s = createGame(config);
+    s.energy = 100;
+    for (const userId of ['__proto__', 'constructor', 'toString']) {
+      applyAction(s, { type: 'summon', unit: 'soldier', userId, nickname: userId }, config);
+    }
+    expect({}.score).toBeUndefined();
+    expect(topHelpers(s, 5).map((r) => r.nickname).sort()).toEqual(['__proto__', 'constructor', 'toString']);
+  });
+});
+
 describe('tick', () => {
   it('passive energy grows but never exceeds max', () => {
     const s = createGame(config);

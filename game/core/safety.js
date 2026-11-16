@@ -7,7 +7,8 @@ const BLOCK_RE = new RegExp(BLOCKLIST.map(escapeRe).join('|'), 'giu');
 // Names and comments come from strangers; clean them before they appear on a live stream.
 export function sanitizeName(name) {
   if (typeof name !== 'string') return '';
-  const clean = name.replace(/\p{Cc}/gu, '').replace(BLOCK_RE, '***');
+  // NFKC folds look-alikes (full-width letters); Cc/Cf removal drops control, zero-width and bidi-override characters.
+  const clean = name.normalize('NFKC').replace(/[\p{Cc}\p{Cf}]/gu, '').replace(BLOCK_RE, '***');
   return Array.from(clean).slice(0, MAX_NAME).join('');
 }
 

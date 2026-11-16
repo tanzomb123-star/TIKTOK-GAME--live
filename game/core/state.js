@@ -22,7 +22,7 @@ export function createGame(config) {
     units: [],
     enemies: [],
     boss: null,
-    leaderboard: {},
+    leaderboard: Object.create(null), // null prototype: viewer ids like '__proto__' must be plain keys
     log: [],
     nextId: 1,
     waveState: { spawned: 0, spawnTimer: 0, restLeft: null },
@@ -50,8 +50,12 @@ export function applyAction(state, action, config) {
       return true;
     }
     case 'upgrade':
-      if (state.towerLevel >= config.tower.maxLevel) return false;
-      state.towerLevel += 1;
+      if (state.towerLevel >= config.tower.maxLevel) {
+        // Tower already maxed: a small gift must still have a visible effect.
+        state.energy = Math.min(config.energy.max, state.energy + config.tower.maxLevelGiftEnergy);
+      } else {
+        state.towerLevel += 1;
+      }
       addScore(state, action, SCORE.upgrade);
       return true;
     case 'clear':

@@ -18,6 +18,19 @@ describe('sanitizeName', () => {
   });
 });
 
+describe('sanitizeName bypass attempts', () => {
+  it('masks words split by zero-width or soft-hyphen characters', () => {
+    expect(sanitizeName('fu\u200Bck')).toBe('***');
+    expect(sanitizeName('sh\u00ADit')).toBe('***');
+  });
+  it('strips bidi override characters', () => {
+    expect(sanitizeName('a\u202Eb')).toBe('ab');
+  });
+  it('masks full-width lookalikes (NFKC)', () => {
+    expect(sanitizeName('ｆｕｃｋ')).toBe('***');
+  });
+});
+
 describe('hashUserId', () => {
   it('is stable, short and does not contain the input', () => {
     const h = hashUserId('some_user_name');
