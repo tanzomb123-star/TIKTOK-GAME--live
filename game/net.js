@@ -6,7 +6,7 @@ export function hubUrl(loc) {
 }
 
 // WebSocket client that reconnects every 2s when the hub is unavailable.
-export function connect(url, onEvent) {
+export function connect(url, onEvent, onStatus = () => {}) {
   let ws;
   let closed = false;
   let timer;
@@ -18,10 +18,11 @@ export function connect(url, onEvent) {
       timer = setTimeout(open, 2000);
       return;
     }
+    ws.onopen = () => onStatus('open');
     ws.onmessage = (m) => {
       try { onEvent(JSON.parse(m.data)); } catch { /* ignore malformed */ }
     };
-    ws.onclose = () => { if (!closed) timer = setTimeout(open, 2000); };
+    ws.onclose = () => { onStatus('closed'); if (!closed) timer = setTimeout(open, 2000); };
     ws.onerror = () => ws.close();
   };
   open();

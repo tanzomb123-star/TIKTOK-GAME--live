@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/game/dashboard/dashboard.css" />
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>แดชบอร์ดไลฟ์</h1>
+      <span id="status" class="pill off">กำลังเชื่อมต่อ…</span>
+      <span id="demo" class="pill demo" hidden>DEMO</span>
+    </div>
+    <div class="actions">
+      <span id="uptime" class="muted"></span>
+      <button id="export">ส่งออก CSV</button>
+      <button id="reset" class="ghost">ล้างข้อมูล</button>
+    </div>
+  </header>
+  <p class="note">หน้านี้สำหรับผู้ไลฟ์ดูเอง ไม่ต้องเอาขึ้นจอไลฟ์ • ข้อมูลอยู่ในหน้านี้เท่านั้น ปิดหน้า = หายจนกว่าจะกดส่งออก</p>
+
+  <section class="kpis">
+    <div class="kpi gold"><span>เพชรรวม</span><b id="k-diamonds">0</b></div>
+    <div class="kpi"><span>ของขวัญ (ครั้ง)</span><b id="k-gifts">0</b></div>
+    <div class="kpi cyan"><span>คนดูตอนนี้</span><b id="k-viewers">0</b><small id="k-peak">สูงสุด 0</small></div>
+    <div class="kpi"><span>คอมเมนต์</span><b id="k-comments">0</b></div>
+    <div class="kpi pink"><span>ไลก์</span><b id="k-likes">0</b></div>
+    <div class="kpi"><span>เข้าห้อง</span><b id="k-joins">0</b></div>
+    <div class="kpi"><span>ติดตามใหม่</span><b id="k-follows">0</b></div>
+    <div class="kpi"><span>แชร์</span><b id="k-shares">0</b></div>
+  </section>
+
+  <main>
+    <section class="panel feed">
+      <div class="panel-head">
+        <h2>ฟีดสด</h2>
+        <div class="chips" id="filters">
+          <button data-f="all" class="on">ทั้งหมด</button>
+          <button data-f="gift">ของขวัญ</button>
+          <button data-f="comment">คอมเมนต์</button>
+          <button data-f="like">ไลก์</button>
+          <button data-f="other">อื่น ๆ</button>
+        </div>
+        <input id="search" type="search" placeholder="ค้นหาชื่อหรือข้อความ" />
+      </div>
+      <ol id="feed"></ol>
+    </section>
+
+    <aside>
+      <section class="panel">
+        <h2>ส่งของขวัญมากที่สุด</h2>
+        <ol id="top-gifters" class="rank"></ol>
+      </section>
+      <section class="panel">
+        <h2>ของขวัญแยกตามชนิด</h2>
+        <table><thead><tr><th>ของขวัญ</th><th>ครั้ง</th><th>เพชร</th></tr></thead><tbody id="gift-types"></tbody></table>
+      </section>
+      <section class="panel">
+        <h2>คอมเมนต์มากที่สุด</h2>
+        <ol id="top-commenters" class="rank"></ol>
+      </section>
+    </aside>
+  </main>
+  <script type="module" src="/game/dashboard/main.js"></script>
+</body>
+</html>

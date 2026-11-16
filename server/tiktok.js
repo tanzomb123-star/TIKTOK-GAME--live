@@ -16,6 +16,10 @@ function who(user) {
 // Accepts both the current (content/count/gift) and legacy (comment/likeCount/giftDetails) shapes.
 export function normalize(raw, kind, streaks = new Map()) {
   if (!raw || typeof raw !== 'object') return null;
+  if (kind === 'roomUser') {
+    const count = Number(raw.viewerCount ?? raw.total ?? raw.totalUser);
+    return Number.isFinite(count) && count >= 0 && (raw.viewerCount ?? raw.total ?? raw.totalUser) !== undefined ? { type: 'viewers', count } : null;
+  }
   const w = who(raw.user);
   if (!w) return null;
   switch (kind) {
@@ -32,7 +36,9 @@ export function normalize(raw, kind, streaks = new Map()) {
       const each = Number(g.diamondCount);
       if (!(each > 0)) return null;
       const count = Math.max(Number(raw.repeatCount) || 1, 1);
-      if ((g.type ?? g.giftType) !== 1) return { type: 'gift', ...w, diamonds: each * count };
+      const giftName = asStr(g.name ?? g.giftName) || undefined;
+      const named = giftName ? { giftName } : {};
+      if ((g.type ?? g.giftType) !== 1) return { type: 'gift', ...w, diamonds: each * count, ...named };
       // Streak gift: apply each new step immediately (so the effect shows at once) and ignore the closing duplicate.
       const key = `${w.userId}:${asStr(raw.groupId)}`;
       const delta = count - (streaks.get(key) || 0);
@@ -41,10 +47,14 @@ export function normalize(raw, kind, streaks = new Map()) {
         if (streaks.size > 1000) streaks.clear(); // streak-end events can be lost; never grow without bound
         streaks.set(key, count);
       }
-      return delta > 0 ? { type: 'gift', ...w, diamonds: each * delta } : null;
+      return delta > 0 ? { type: 'gift', ...w, diamonds: each * delta, ...named } : null;
     }
     case 'member':
       return { type: 'join', ...w };
+    case 'follow':
+      return { type: 'follow', ...w };
+    case 'share':
+      return { type: 'share', ...w };
     default:
       return null;
   }
@@ -91,6 +101,9 @@ export function startTikTok(username, emit, { logDir = 'logs', retryMs = 10000, 
     conn.on(WebcastEvent.LIKE, handle('like'));
     conn.on(WebcastEvent.GIFT, handle('gift'));
     conn.on(WebcastEvent.MEMBER, handle('member'));
+    conn.on(WebcastEvent.ROOM_USER, handle('roomUser'));
+    conn.on(WebcastEvent.FOLLOW, handle('follow'));
+    conn.on(WebcastEvent.SHARE, handle('share'));
     conn.on(ControlEvent.DISCONNECTED, () => retry('disconnected'));
     conn.on(ControlEvent.ERROR, (err) => console.error('TikTok error:', err?.info ?? err?.message ?? err));
     try {
