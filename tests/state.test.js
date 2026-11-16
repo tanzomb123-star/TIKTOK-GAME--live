@@ -76,7 +76,7 @@ describe('tick', () => {
     const s = createGame(config);
     s.wave = 3;
     expect(waveSize(3, config)).toBe(config.waves.baseCount + config.waves.countPerWave * 2);
-    tick(s, 14, config);
+    tick(s, waveSize(3, config) * config.waves.spawnIntervalSec, config);
     expect(s.enemies).toHaveLength(waveSize(3, config));
   });
   it('enemy reaching house reduces houseHp', () => {

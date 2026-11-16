@@ -1,4 +1,5 @@
 import { topHelpers } from '../game/core/state.js';
+import { sanitizeName } from '../game/core/safety.js';
 
 const STYLE = { fontFamily: 'sans-serif', color: '#fff', stroke: '#000', strokeThickness: 3 };
 
@@ -18,7 +19,7 @@ export function createHud(scene, config) {
       hp.setText(`บ้าน HP ${Math.ceil(state.houseHp)}/${config.house.maxHp}`);
       energy.setText(`พลังงาน ${Math.floor(state.energy)}/${config.energy.max}`);
       const top = topHelpers(state, 5);
-      board.setText(['ผู้ช่วยเด่น', ...top.map((r, i) => `${i + 1}. ${r.nickname} ${r.score}`)].join('\n'));
+      board.setText(['ผู้ช่วยเด่น', ...top.map((r, i) => `${i + 1}. ${sanitizeName(r.nickname)} ${r.score}`)].join('\n'));
       demo.setText(isDemo ? 'DEMO' : '');
     },
   };
